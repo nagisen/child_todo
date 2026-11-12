@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#a9b2bb">
+<meta name="theme-color" content="#f1c3d2">
 <title>あさのじゅんびボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,35 +16,40 @@ html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; }
 [hidden] { display: none !important; }
 :root {
-  --page: #eef1f4;
+  --page: #fbf1f5;
   --ink: #23282e;
   --muted: #5b6570;
   --line: #d3d9df;
   --panel: #ffffff;
   /* physical board colors stay the same in both themes */
-  --board: #fbfcfd;
-  --frame: #a9b2bb;
-  --frame-dark: #7f8992;
+  --board: #fffbfd;
+  --frame: #f1c3d2;
+  --frame-dark: #dd9fb5;
   --board-ink: #2a2f35;
   --hour: #e0473c;
   --minute: #2f6fd6;
-  --done: #2f9e5b;
-  --done-soft: #e3f4ea;
+  --pink: #e8628f;
+  --pink-soft: #fde7ef;
+  --pink-line: #f6c9d8;
+  --done: #e8628f;
+  --done-soft: #fde7ef;
+  --late: #d42a3c;
+  --late-soft: #ffe6e8;
   --card: #ffffff;
-  --card-edge: #e3e7eb;
-  --goal: #fff4d6;
-  --goal-edge: #f0c64a;
+  --card-edge: #f3dbe4;
+  --goal: #fff2f7;
+  --goal-edge: #f3a6c0;
   --f-board: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Noto Sans JP", sans-serif;
   --f-body: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --page: #171b20; --ink: #e7ebef; --muted: #a2acb6; --line: #2e353d; --panel: #1f252c;
+    --page: #1f181c; --ink: #f1e8ec; --muted: #b8a6ae; --line: #3a2e34; --panel: #2a2126;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --page: #171b20; --ink: #e7ebef; --muted: #a2acb6; --line: #2e353d; --panel: #1f252c;
+  --page: #1f181c; --ink: #f1e8ec; --muted: #b8a6ae; --line: #3a2e34; --panel: #2a2126;
   color-scheme: dark;
 }
 body { background: var(--page); color: var(--ink); font-family: var(--f-body); line-height: 1.7; }
@@ -71,20 +76,34 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
   display: grid; gap: 18px;
   font-family: var(--f-board);
 }
-.now { display: grid; justify-items: center; gap: 6px; background: #fff; border: 2px solid var(--card-edge); border-radius: 24px; padding: 14px 28px 12px; }
+.now { display: grid; justify-items: center; gap: 6px; background: #fff; border: 2px solid var(--pink-line); border-radius: 24px; padding: clamp(46px, 7vw, 64px) 28px 12px; }
+.bunny { position: relative; }
+.bunny svg { position: relative; z-index: 1; }
+.bunny::before, .bunny::after {
+  content: ""; position: absolute; top: -27%; width: 21%; height: 40%; z-index: 0;
+  border: 3px solid #2a2f35; border-radius: 50% 50% 45% 45%;
+  background: radial-gradient(ellipse 36% 60% at 50% 58%, #f7b6ca 98%, #fff 100%);
+}
+.bunny::before { left: 23%; transform: rotate(-14deg); }
+.bunny::after { right: 23%; transform: rotate(14deg); }
 .now .clock { width: clamp(150px, 26vw, 210px); max-width: none; }
 .now-text { display: flex; align-items: baseline; gap: 10px; }
 .now-text b { font-size: 1.05rem; font-weight: 900; }
 .now-text span { font-size: .95rem; font-weight: 700; color: #6b747d; font-variant-numeric: tabular-nums; }
 .step { position: relative; }
-.step.current .clock svg circle:first-of-type { stroke: var(--minute); stroke-width: 5; }
-.step.current::before { content: "いま"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 3; background: var(--minute); color: #fff; font-size: .75rem; font-weight: 900; padding: 1px 10px; border-radius: 999px; }
+.step.current .clock svg circle:first-of-type { stroke: var(--pink); stroke-width: 5; }
+.step.current::before, .step.late::before { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 3; color: #fff; font-size: .75rem; font-weight: 900; padding: 1px 10px; border-radius: 999px; white-space: nowrap; }
+.step.current::before { content: "♥ いま"; background: var(--pink); }
+.step.late::before { content: "じかん すぎたよ"; background: var(--late); }
+.step.late .clock svg circle:first-of-type { stroke: var(--late); stroke-width: 5; }
+.step.late .time { color: var(--late); }
+.step.late .front { border: 3px solid var(--late); background: var(--late-soft); }
 .now-float {
   position: fixed; z-index: 20; left: 50%;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   display: flex; align-items: center; gap: 10px;
   background: #fff; color: var(--board-ink); font-family: var(--f-board);
-  border: 2px solid var(--card-edge); border-radius: 999px; padding: 6px 18px 6px 6px;
+  border: 2px solid var(--pink-line); border-radius: 999px; padding: 6px 18px 6px 6px;
   box-shadow: 0 6px 20px rgba(0,0,0,.18);
   opacity: 0; visibility: hidden; transform: translate(-50%, -12px);
   transition: opacity .2s, transform .2s, visibility .2s;
@@ -94,7 +113,8 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
 .now-float b { display: block; font-size: .85rem; font-weight: 900; white-space: nowrap; }
 .now-float span { font-size: 1.1rem; font-weight: 900; color: #4a535c; font-variant-numeric: tabular-nums; }
 .board-head { display: grid; justify-items: center; gap: 12px; text-align: center; }
-.goal.current { border-style: solid; border-color: var(--minute); box-shadow: 0 0 0 3px rgba(47,111,214,.18); }
+.goal.current { border-style: solid; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(232,98,143,.2); }
+.board-head h2::before, .board-head h2::after { content: "♡"; color: var(--pink); font-size: .6em; vertical-align: .35em; margin: 0 .4em; }
 .board-head h2 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.3rem); font-weight: 900; letter-spacing: .06em; }
 .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; font-size: .85rem; font-weight: 700; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -116,7 +136,7 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
   perspective: 700px; border: 0; padding: 0; background: none; cursor: pointer;
   font: inherit; color: inherit;
 }
-.card:focus-visible { outline: 3px solid var(--minute); outline-offset: 4px; border-radius: 14px; }
+.card:focus-visible { outline: 3px solid var(--pink); outline-offset: 4px; border-radius: 14px; }
 .card { display: block; }
 .flip { display: block; position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .5s cubic-bezier(.3,.7,.3,1.2); }
 .card[aria-pressed="true"] .flip { transform: rotateY(180deg); }
@@ -131,9 +151,8 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
 .back { background: var(--done-soft); border: 2px solid var(--done); color: var(--done); transform: rotateY(180deg); }
 .back .stamp { font-size: clamp(2.2rem, 6vw, 3rem); line-height: 1; }
 .back .word { font-size: clamp(1rem, 2.4vw, 1.25rem); font-weight: 900; }
-.magnet { position: absolute; top: -6px; left: 50%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #ff9a8f, var(--hour)); box-shadow: 0 2px 3px rgba(0,0,0,.25); z-index: 2; }
-.back .magnet { background: radial-gradient(circle at 35% 35%, #8fd9ad, var(--done)); }
+.magnet { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); z-index: 2; color: var(--pink); font-size: 20px; line-height: 1; text-shadow: 0 2px 2px rgba(0,0,0,.15); }
+.magnet::before { content: "♥"; }
 
 .goal {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 24px;
@@ -142,18 +161,18 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
 .goal .clock { width: 96px; flex: none; }
 .goal-text { display: grid; gap: 2px; text-align: center; }
 .goal-text strong { font-size: clamp(1.4rem, 3.6vw, 1.9rem); font-weight: 900; letter-spacing: .08em; }
-.goal-text span { font-size: .9rem; font-weight: 700; color: #6b5a1e; }
+.goal-text span { font-size: .9rem; font-weight: 700; color: #94405f; }
 .stickers { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-.slot { display: grid; justify-items: center; gap: 2px; border: 0; padding: 0; background: none; font: inherit; color: #6b5a1e; cursor: pointer; }
-.slot .seal { width: 48px; height: 48px; border-radius: 50%; border: 2px dashed #d7b445; background: rgba(255,255,255,.5); display: grid; place-items: center; font-size: 1.6rem; line-height: 1; }
+.slot { display: grid; justify-items: center; gap: 2px; border: 0; padding: 0; background: none; font: inherit; color: #94405f; cursor: pointer; }
+.slot .seal { width: 48px; height: 48px; border-radius: 50%; border: 2px dashed var(--goal-edge); background: rgba(255,255,255,.6); display: grid; place-items: center; font-size: 1.6rem; line-height: 1; }
 .slot .day { font-size: .75rem; font-weight: 900; }
 .slot[aria-pressed="true"] .seal { border-style: solid; background: #fff; animation: pop .35s cubic-bezier(.3,.7,.3,1.6); }
-.slot:focus-visible { outline: 3px solid var(--minute); outline-offset: 3px; border-radius: 12px; }
+.slot:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; border-radius: 12px; }
 @keyframes pop { from { transform: scale(.4) rotate(-20deg); } to { transform: scale(1) rotate(0); } }
 
 .board-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: .8rem; color: #6b747d; }
-.reset { font: inherit; font-weight: 700; font-size: .8rem; border: 1px solid #c9d0d6; background: #fff; color: #4a535c; border-radius: 999px; padding: 4px 14px; cursor: pointer; }
-.reset:focus-visible { outline: 3px solid var(--minute); outline-offset: 2px; }
+.reset { font: inherit; font-weight: 700; font-size: .8rem; border: 1px solid var(--pink-line); background: #fff; color: #4a535c; border-radius: 999px; padding: 4px 14px; cursor: pointer; }
+.reset:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
 .foot-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .wake { font-size: .75rem; font-weight: 700; color: #6b747d; }
 
@@ -188,7 +207,7 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
     <div class="board-head">
       <h2>あさの じゅんび</h2>
       <div class="now">
-        <div class="clock" id="now-clock"></div>
+        <div class="clock bunny" id="now-clock"></div>
         <div class="now-text"><b>いまの とけい</b><span id="now-digital"></span></div>
       </div>
       <div class="legend" aria-label="針の色">
@@ -202,7 +221,7 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
     <div class="goal" id="goal">
       <div class="clock" data-h="8" data-m="0"></div>
       <div class="goal-text">
-        <strong>🚪 しゅっぱつ！</strong>
+        <strong>🐰 しゅっぱつ！</strong>
         <span>8:00 までに ぜんぶ くるっ としたら シールを ぺたっ</span>
       </div>
       <div class="stickers" id="stickers" aria-label="ごほうびシール"></div>
@@ -232,9 +251,10 @@ const STEPS = [
 ];
 const GOAL = 8 * 60;           // 8:00 しゅっぱつ
 const DAY_START = 6 * 60 + 30; // 6:30 から「いま」を出す
+const LATE_FROM = 7 * 60, LATE_UNTIL = 9 * 60; // 「じかん すぎたよ」は 7:00〜9:00 の間だけ
 const SEALS = [
-  { day: "げつ", seal: "⭐" }, { day: "か", seal: "🌸" }, { day: "すい", seal: "🍓" },
-  { day: "もく", seal: "🚗" }, { day: "きん", seal: "🐶" },
+  { day: "げつ", seal: "🐰" }, { day: "か", seal: "💗" }, { day: "すい", seal: "🎀" },
+  { day: "もく", seal: "🌸" }, { day: "きん", seal: "🍓" },
 ];
 const KEY = "asa-board-v2";
 const today = () => new Date().toDateString();
@@ -279,7 +299,7 @@ stepsEl.innerHTML = STEPS.map((s, i) => `
     <button class="card" type="button" id="card-${i}" aria-pressed="${state.done[i]}" aria-label="${s.word.replace('\n', '・')}">
       <span class="flip">
         <span class="face front"><span class="magnet"></span><span class="pic">${s.pic}</span><span class="word">${s.word}</span></span>
-        <span class="face back"><span class="magnet"></span><span class="stamp">💮</span><span class="word">できた！</span></span>
+        <span class="face back"><span class="magnet"></span><span class="stamp">💗</span><span class="word">できた！</span></span>
       </span>
     </button>
   </div>`).join("");
@@ -292,6 +312,7 @@ stepsEl.addEventListener("click", e => {
   const on = card.getAttribute("aria-pressed") !== "true";
   card.setAttribute("aria-pressed", on);
   state.done[+card.id.split("-")[1]] = on; save();
+  tick();
 });
 
 const stickersEl = document.getElementById("stickers");
@@ -310,6 +331,10 @@ stickersEl.addEventListener("click", e => {
 
 const stepEls = [...document.querySelectorAll(".step")];
 function tick() {
+  if (state.date !== today()) {
+    state.date = today(); state.done = STEPS.map(() => false); save();
+    document.querySelectorAll(".card").forEach(c => c.setAttribute("aria-pressed", "false"));
+  }
   const d = new Date();
   const h = d.getHours(), m = d.getMinutes();
   const mf = m + d.getSeconds() / 60;
@@ -323,6 +348,7 @@ function tick() {
     const start = i === 0 ? DAY_START : STEPS[i - 1].h * 60 + STEPS[i - 1].m;
     const end = s.h * 60 + s.m;
     stepEls[i].classList.toggle("current", now >= start && now < end);
+    stepEls[i].classList.toggle("late", now >= LATE_FROM && now < LATE_UNTIL && now >= end && !state.done[i]);
   });
   const last = STEPS[STEPS.length - 1];
   document.getElementById("goal").classList.toggle("current", now >= last.h * 60 + last.m && now < GOAL);
@@ -369,6 +395,7 @@ if (document.fullscreenEnabled && document.documentElement.requestFullscreen) {
 document.getElementById("reset").addEventListener("click", () => {
   document.querySelectorAll(".card").forEach(c => c.setAttribute("aria-pressed", "false"));
   state.done = STEPS.map(() => false); save();
+  tick();
 });
 </script>
 
