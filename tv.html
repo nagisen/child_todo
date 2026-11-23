@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1c3d2">
+<title>テレビのやくそくボード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* タブレット用：テレビの回数と時間を見せるボード（あさのじゅんびボードと同じデザイン） */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+[hidden] { display: none !important; }
+:root {
+  --page: #fbf1f5;
+  --ink: #23282e;
+  --muted: #5b6570;
+  --line: #d3d9df;
+  --panel: #ffffff;
+  /* physical board colors stay the same in both themes */
+  --board: #fffbfd;
+  --frame: #f1c3d2;
+  --frame-dark: #dd9fb5;
+  --board-ink: #2a2f35;
+  --hour: #e0473c;
+  --minute: #2f6fd6;
+  --pink: #e8628f;
+  --pink-soft: #fde7ef;
+  --pink-line: #f6c9d8;
+  --done: #e8628f;
+  --done-soft: #fde7ef;
+  --late: #d42a3c;
+  --late-soft: #ffe6e8;
+  --soon: #f0a020;
+  --soon-soft: #fff4dc;
+  --card: #ffffff;
+  --card-edge: #f3dbe4;
+  --goal: #fff2f7;
+  --goal-edge: #f3a6c0;
+  --f-board: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Noto Sans JP", sans-serif;
+  --f-body: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #1f181c; --ink: #f1e8ec; --muted: #b8a6ae; --line: #3a2e34; --panel: #2a2126;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #1f181c; --ink: #f1e8ec; --muted: #b8a6ae; --line: #3a2e34; --panel: #2a2126;
+  color-scheme: dark;
+}
+body { background: var(--page); color: var(--ink); font-family: var(--f-body); line-height: 1.7; }
+.wrap {
+  max-width: 1080px; margin: 0 auto;
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px;
+}
+
+/* ---- whiteboard ---- */
+.board {
+  background: var(--board);
+  color: var(--board-ink);
+  border: 12px solid var(--frame);
+  border-bottom-width: 18px;
+  border-bottom-color: var(--frame-dark);
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.18), inset 0 0 0 1px rgba(0,0,0,.04);
+  padding: clamp(14px, 3vw, 28px);
+  display: grid; gap: 22px;
+  font-family: var(--f-board);
+}
+.board-head { display: grid; justify-items: center; gap: 4px; text-align: center; }
+.board-head h2::before, .board-head h2::after { content: "♡"; color: var(--pink); font-size: .6em; vertical-align: .35em; margin: 0 .4em; }
+.board-head h2 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.3rem); font-weight: 900; letter-spacing: .06em; }
+.board-head p { margin: 0; font-size: clamp(.95rem, 2.2vw, 1.15rem); font-weight: 700; color: #94405f; }
+
+/* ---- big timer ---- */
+.timer {
+  display: grid; justify-items: center; gap: 10px;
+  background: #fff; border: 2px solid var(--pink-line); border-radius: 24px;
+  padding: 20px 20px 18px;
+}
+.timer.soon { border-color: var(--soon); background: var(--soon-soft); }
+.timer.over { border-color: var(--late); background: var(--late-soft); }
+.timer-main { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px 32px; }
+.pie { width: clamp(200px, 40vw, 300px); aspect-ratio: 1; }
+.pie svg { width: 100%; height: 100%; display: block; }
+.timer.running:not(.paused) .pie-tv { animation: bob 2.4s ease-in-out infinite; transform-origin: 50% 50%; transform-box: fill-box; }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+.end-box { display: grid; justify-items: center; gap: 4px; }
+.end-box .clock { width: clamp(110px, 18vw, 140px); }
+.end-box b { font-size: 1rem; font-weight: 900; }
+.end-box span { font-size: .9rem; font-weight: 700; color: #6b747d; font-variant-numeric: tabular-nums; }
+.msg { margin: 0; text-align: center; font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 900; letter-spacing: .06em; line-height: 1.4; }
+.timer.soon .msg { color: #a86400; }
+.timer.over .msg { color: var(--late); }
+.sub { margin: -6px 0 0; font-size: .95rem; font-weight: 700; color: #6b747d; font-variant-numeric: tabular-nums; }
+.ctrl { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.btn { font: inherit; font-weight: 900; font-size: 1rem; border: 2px solid var(--pink-line); background: #fff; color: var(--board-ink); border-radius: 999px; padding: 6px 20px; cursor: pointer; }
+.btn.main { background: var(--pink); border-color: var(--pink); color: #fff; }
+.btn:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+.timer.over .pie-tv { animation: shake .6s ease-in-out infinite; transform-origin: 50% 50%; transform-box: fill-box; }
+@keyframes shake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+
+/* ---- tickets (same card as the morning board) ---- */
+.tickets { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(14px, 3vw, 28px); }
+.ticket { position: relative; display: grid; justify-items: center; gap: 6px; width: clamp(110px, 22vw, 160px); }
+.num { font-size: .9rem; font-weight: 900; color: #94405f; }
+.card {
+  width: 100%; aspect-ratio: 1;
+  perspective: 700px; border: 0; padding: 0; background: none; cursor: pointer;
+  font: inherit; color: inherit; display: block;
+}
+.card:disabled { cursor: default; }
+.card:focus-visible { outline: 3px solid var(--pink); outline-offset: 4px; border-radius: 14px; }
+.flip { display: block; position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .5s cubic-bezier(.3,.7,.3,1.2); }
+.ticket.used .flip { transform: rotateY(180deg); }
+.face {
+  position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  border-radius: 14px; display: grid; place-items: center; align-content: center; gap: 2px;
+  box-shadow: 0 3px 0 rgba(0,0,0,.08), 0 6px 14px rgba(0,0,0,.08);
+}
+.front { background: var(--card); border: 2px solid var(--card-edge); }
+.front .pic { font-size: clamp(2.6rem, 7vw, 3.6rem); line-height: 1.1; }
+.front .word { font-size: clamp(.95rem, 2.2vw, 1.2rem); font-weight: 900; }
+.back { background: #eef0f2; border: 2px solid #c3c9cf; color: #6b747d; transform: rotateY(180deg); }
+.back .stamp { font-size: clamp(2.4rem, 6vw, 3.2rem); line-height: 1; }
+.back .word { font-size: clamp(1rem, 2.4vw, 1.25rem); font-weight: 900; }
+.magnet { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); z-index: 2; color: var(--pink); font-size: 20px; line-height: 1; text-shadow: 0 2px 2px rgba(0,0,0,.15); }
+.magnet::before { content: "♥"; }
+.ticket.active .front { border: 3px solid var(--pink); background: var(--pink-soft); box-shadow: 0 0 0 5px rgba(232,98,143,.2), 0 6px 14px rgba(0,0,0,.08); }
+.ticket.active::before { content: "♥ いま みてる"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); z-index: 3; color: #fff; background: var(--pink); font-size: .75rem; font-weight: 900; padding: 1px 10px; border-radius: 999px; white-space: nowrap; }
+.ticket.next .front { border-style: dashed; border-color: var(--goal-edge); }
+.ticket.wiggle .flip { animation: wiggle .4s ease-in-out; }
+@keyframes wiggle { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+
+/* ---- parent settings ---- */
+.board-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: .8rem; color: #6b747d; }
+.foot-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.reset, .link { font: inherit; font-weight: 700; font-size: .8rem; border: 1px solid var(--pink-line); background: #fff; color: #4a535c; border-radius: 999px; padding: 4px 14px; cursor: pointer; text-decoration: none; }
+.reset:focus-visible, .link:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+.wake { font-size: .75rem; font-weight: 700; color: #6b747d; }
+.settings { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+.settings label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.settings select { font: inherit; font-weight: 700; border: 1px solid var(--pink-line); border-radius: 8px; padding: 2px 6px; background: #fff; color: #2a2f35; }
+
+@media (prefers-reduced-motion: reduce) {
+  .flip { transition: none; }
+  .timer .pie-tv, .ticket.wiggle .flip { animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <section class="board" aria-label="テレビの やくそく ボード">
+    <div class="board-head">
+      <h2>テレビの やくそく</h2>
+      <p id="rule"></p>
+    </div>
+
+    <div class="timer" id="timer" aria-live="polite">
+      <div class="timer-main">
+        <div class="pie" id="pie"></div>
+        <div class="end-box" id="end-box" hidden>
+          <div class="clock" id="end-clock"></div>
+          <b>この とけいに なったら</b>
+          <span id="end-digital"></span>
+        </div>
+      </div>
+      <p class="msg" id="msg"></p>
+      <p class="sub" id="sub"></p>
+      <div class="ctrl">
+        <button class="btn" id="pause" type="button" hidden>ちょっと とめる</button>
+        <button class="btn main" id="stop" type="button" hidden>おしまい にする</button>
+      </div>
+    </div>
+
+    <div class="tickets" id="tickets" aria-label="テレビ チケット"></div>
+
+    <div class="board-foot">
+      <div class="settings" aria-label="おとなの せってい">
+        <label>1日の回数
+          <select id="set-count"></select>
+        </label>
+        <label>1回の時間
+          <select id="set-min"></select>
+        </label>
+      </div>
+      <div class="foot-tools">
+        <span class="wake" id="wake">画面スリープ：確認中</span>
+        <a class="link" href="./">あさの じゅんび</a>
+        <button class="reset" id="fullscreen" type="button" hidden>全画面</button>
+        <button class="reset" id="reset" type="button">きょうの分を もどす</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ---- 設定（おとなが下の欄で変えられる。初期値は 3回・30分） ----
+const DEFAULT_COUNT = 3, DEFAULT_MIN = 30;
+const COUNT_CHOICES = [1, 2, 3, 4, 5];
+const MIN_CHOICES = [5, 10, 15, 20, 30, 45, 60];
+const SOON_MIN = 5; // のこり 5分で「もうすぐ おしまい」
+const PICS = ["📺", "📺", "📺", "📺", "📺"];
+
+const SET_KEY = "tv-board-settings-v1";
+const KEY = "tv-board-v1";
+const today = () => new Date().toDateString();
+
+function loadSettings() {
+  try {
+    const v = JSON.parse(localStorage.getItem(SET_KEY));
+    if (v && COUNT_CHOICES.includes(v.count) && MIN_CHOICES.includes(v.min)) return v;
+  } catch (e) {}
+  return { count: DEFAULT_COUNT, min: DEFAULT_MIN };
+}
+const settings = loadSettings();
+function saveSettings() { try { localStorage.setItem(SET_KEY, JSON.stringify(settings)); } catch (e) {} }
+
+// state.used[i]: その回は みおわった
+// state.active: { i, total(ms), elapsed(ms), since(ms|null) } since が null のときは とめている
+// state.over: 時間になって「おしまい」を出している回の番号（おとなが おしまい を押すまで）
+function fresh() { return { date: today(), used: Array(settings.count).fill(false), active: null, over: null }; }
+function load() {
+  try { const v = JSON.parse(localStorage.getItem(KEY)); if (v && v.date === today() && Array.isArray(v.used)) return v; } catch (e) {}
+  return fresh();
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+let state = load();
+fitCount();
+
+function fitCount() {
+  const u = state.used.slice(0, settings.count);
+  while (u.length < settings.count) u.push(false);
+  state.used = u;
+  if (state.active && state.active.i >= settings.count) state.active = null;
+  if (state.over != null && state.over >= settings.count) state.over = null;
+}
+
+// ---- 時計（あさのじゅんびボードと同じ） ----
+function clockSVG(h, m, label) {
+  const ticks = [];
+  for (let i = 0; i < 60; i++) {
+    const a = i * 6 * Math.PI / 180, big = i % 5 === 0;
+    const r1 = big ? 38 : 41, r2 = 44;
+    ticks.push(`<line x1="${50 + r1 * Math.sin(a)}" y1="${50 - r1 * Math.cos(a)}" x2="${50 + r2 * Math.sin(a)}" y2="${50 - r2 * Math.cos(a)}" stroke="#2a2f35" stroke-width="${big ? 1.8 : .6}" stroke-linecap="round"/>`);
+  }
+  const nums = [];
+  for (let n = 1; n <= 12; n++) {
+    const a = n * 30 * Math.PI / 180, r = 31, key = n % 3 === 0;
+    nums.push(`<text x="${50 + r * Math.sin(a)}" y="${50 - r * Math.cos(a)}" text-anchor="middle" dominant-baseline="central" font-family="Zen Maru Gothic, sans-serif" font-weight="${key ? 900 : 700}" font-size="${key ? 11 : 8}" fill="#2a2f35">${n}</text>`);
+  }
+  const ha = ((h % 12) + m / 60) * 30, ma = m * 6;
+  return `<svg viewBox="0 0 100 100" role="img" aria-label="${label || (h + '時' + (m ? Math.floor(m) + '分' : ''))}">
+    <circle cx="50" cy="50" r="47" fill="#ffffff" stroke="#2a2f35" stroke-width="3"/>
+    ${ticks.join("")}${nums.join("")}
+    <line x1="50" y1="50" x2="50" y2="25" stroke="var(--hour)" stroke-width="5.5" stroke-linecap="round" transform="rotate(${ha} 50 50)"/>
+    <line x1="50" y1="50" x2="50" y2="12" stroke="var(--minute)" stroke-width="3.5" stroke-linecap="round" transform="rotate(${ma} 50 50)"/>
+    <circle cx="50" cy="50" r="3.5" fill="#2a2f35"/>
+  </svg>`;
+}
+
+// ---- のこり時間の円（ピンクが へっていく。ぜんぶ なくなったら おしまい） ----
+function pieSVG(frac, mode) {
+  const color = mode === "soon" ? "var(--soon)" : mode === "over" ? "var(--late)" : "var(--pink)";
+  const r = 44, f = Math.max(0, Math.min(1, frac));
+  let wedge = "";
+  if (f >= 0.9999) wedge = `<circle cx="50" cy="50" r="${r}" fill="${color}"/>`;
+  else if (f > 0.0005) {
+    // 12時の位置から 時計まわりに のこりの分だけ（へるときは 12時側に もどっていく）
+    const a = f * 2 * Math.PI;
+    const x = 50 + r * Math.sin(a), y = 50 - r * Math.cos(a);
+    wedge = `<path d="M50 50 L50 ${50 - r} A${r} ${r} 0 ${f > .5 ? 1 : 0} 1 ${x} ${y} Z" fill="${color}"/>`;
+  }
+  const pic = mode === "over" ? "🙈" : mode === "idle-done" ? "🌙" : "📺";
+  const ticks = [];
+  for (let i = 0; i < 12; i++) {
+    const a = i * 30 * Math.PI / 180;
+    ticks.push(`<line x1="${50 + 44 * Math.sin(a)}" y1="${50 - 44 * Math.cos(a)}" x2="${50 + 47 * Math.sin(a)}" y2="${50 - 47 * Math.cos(a)}" stroke="#2a2f35" stroke-width="1.4" stroke-linecap="round"/>`);
+  }
+  return `<svg viewBox="0 0 100 100" role="img" aria-label="のこり の じかん">
+    <circle cx="50" cy="50" r="47" fill="#ffffff" stroke="#2a2f35" stroke-width="3"/>
+    ${wedge}${ticks.join("")}
+    <circle cx="50" cy="50" r="17" fill="#ffffff" stroke="#2a2f35" stroke-width="2"/>
+    <text class="pie-tv" x="50" y="51" text-anchor="middle" dominant-baseline="central" font-size="18">${pic}</text>
+  </svg>`;
+}
+
+// ---- 終わりの音（タップで はじめたときに 音を出す準備をする） ----
+let audio = null;
+function prepareAudio() {
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === "suspended") audio.resume();
+  } catch (e) {}
+}
+function chime() {
+  if (!audio) return;
+  try {
+    const t0 = audio.currentTime;
+    [784, 659, 523].forEach((f, k) => {
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t0 + k * .45);
+      g.gain.linearRampToValueAtTime(.35, t0 + k * .45 + .03);
+      g.gain.exponentialRampToValueAtTime(.001, t0 + k * .45 + .8);
+      o.connect(g).connect(audio.destination);
+      o.start(t0 + k * .45); o.stop(t0 + k * .45 + .85);
+    });
+  } catch (e) {}
+  if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+}
+
+// ---- 画面づくり ----
+const pad = n => String(n).padStart(2, "0");
+const $ = id => document.getElementById(id);
+const ticketsEl = $("tickets");
+
+function renderTickets() {
+  ticketsEl.innerHTML = state.used.map((u, i) => `
+    <div class="ticket" id="t-${i}">
+      <button class="card" type="button" aria-label="テレビ ${i + 1}かいめ">
+        <span class="flip">
+          <span class="face front"><span class="magnet"></span><span class="pic">${PICS[i]}</span><span class="word">${settings.min}ぷん</span></span>
+          <span class="face back"><span class="magnet"></span><span class="stamp">✔️</span><span class="word">みた！</span></span>
+        </span>
+      </button>
+      <span class="num">${i + 1}かいめ</span>
+    </div>`).join("");
+}
+
+function remaining() {
+  const a = state.active;
+  if (!a) return 0;
+  const el = a.elapsed + (a.since ? Date.now() - a.since : 0);
+  return Math.max(0, a.total - el);
+}
+
+function render() {
+  const n = state.used.length;
+  const left = state.used.filter(u => !u).length - (state.active ? 1 : 0);
+  $("rule").textContent = `1にち ${n}かい・1かい ${settings.min}ぷん`;
+
+  const timer = $("timer"), a = state.active;
+  const firstFree = state.used.findIndex((u, i) => !u && !(a && a.i === i));
+  state.used.forEach((u, i) => {
+    const t = $("t-" + i);
+    t.classList.toggle("used", u);
+    t.classList.toggle("active", !!a && a.i === i);
+    t.classList.toggle("next", !a && state.over == null && i === firstFree);
+    const btn = t.querySelector(".card");
+    btn.setAttribute("aria-pressed", u || (!!a && a.i === i));
+    btn.disabled = u;
+  });
+
+  timer.classList.remove("running", "paused", "soon", "over");
+  $("end-box").hidden = true;
+  $("pause").hidden = true;
+  $("stop").hidden = true;
+
+  if (state.over != null) {
+    timer.classList.add("over");
+    $("pie").innerHTML = pieSVG(0, "over");
+    $("msg").textContent = "おしまい！ テレビ ばいばい 👋";
+    $("sub").textContent = left > 0 ? `のこり ${left}かい` : "きょうの テレビは ぜんぶ みたよ";
+    $("stop").hidden = false; $("stop").textContent = "けしたよ";
+    return;
+  }
+  if (a) {
+    const rem = remaining(), mins = Math.ceil(rem / 60000);
+    const soon = rem <= SOON_MIN * 60000;
+    timer.classList.add("running");
+    if (!a.since) timer.classList.add("paused");
+    if (soon) timer.classList.add("soon");
+    $("pie").innerHTML = pieSVG(rem / a.total, soon ? "soon" : "run");
+    if (a.since) {
+      const end = new Date(Date.now() + rem);
+      $("end-box").hidden = false;
+      $("end-clock").innerHTML = clockSVG(end.getHours(), end.getMinutes(), `${end.getHours()}時${end.getMinutes()}分 まで`);
+      $("end-digital").textContent = `${end.getHours()}:${pad(end.getMinutes())} まで`;
+    }
+    $("msg").textContent = !a.since ? "ちょっと おやすみ ⏸" : soon ? "もうすぐ おしまい ⏰" : "テレビ みてるよ 📺";
+    $("sub").textContent = `のこり ${mins}ぷん（${Math.floor(rem / 60000)}:${pad(Math.floor(rem / 1000) % 60)}）`;
+    $("pause").hidden = false; $("pause").textContent = a.since ? "ちょっと とめる" : "つづきを みる";
+    $("stop").hidden = false; $("stop").textContent = "おしまい にする";
+    return;
+  }
+  if (left > 0) {
+    $("pie").innerHTML = pieSVG(1, "run");
+    $("msg").textContent = `テレビ あと ${left}かい みられるよ`;
+    $("sub").textContent = "みるときは 📺 の カードを タッチ";
+  } else {
+    $("pie").innerHTML = pieSVG(0, "idle-done");
+    $("msg").textContent = "きょうの テレビは おしまい 🌙";
+    $("sub").textContent = "また あした みようね";
+  }
+}
+
+function tick() {
+  if (state.date !== today()) { state = fresh(); save(); renderTickets(); }
+  const a = state.active;
+  if (a && a.since && remaining() <= 0) {
+    state.used[a.i] = true; state.over = a.i; state.active = null; save();
+    chime();
+  }
+  render();
+}
+
+// ---- 操作 ----
+ticketsEl.addEventListener("click", e => {
+  const t = e.target.closest(".ticket");
+  if (!t) return;
+  const i = +t.id.split("-")[1];
+  if (state.used[i]) return;
+  if (state.active && state.active.i === i) { togglePause(); return; }
+  if (state.active || state.over != null) {
+    // ほかの回を みている / まだ けしていない ときは はじめない
+    t.classList.remove("wiggle"); void t.offsetWidth; t.classList.add("wiggle");
+    return;
+  }
+  prepareAudio();
+  state.active = { i, total: settings.min * 60000, elapsed: 0, since: Date.now() };
+  save(); render();
+});
+
+function togglePause() {
+  const a = state.active;
+  if (!a) return;
+  if (a.since) { a.elapsed += Date.now() - a.since; a.since = null; }
+  else { prepareAudio(); a.since = Date.now(); }
+  save(); render();
+}
+$("pause").addEventListener("click", togglePause);
+
+$("stop").addEventListener("click", () => {
+  if (state.over != null) { state.over = null; }
+  else if (state.active) { state.used[state.active.i] = true; state.active = null; }
+  save(); render();
+});
+
+$("reset").addEventListener("click", () => {
+  if (!confirm("きょうの テレビの きろくを ぜんぶ もどしますか？")) return;
+  state = fresh(); save(); renderTickets(); render();
+});
+
+// ---- おとなの せってい ----
+const countSel = $("set-count"), minSel = $("set-min");
+countSel.innerHTML = COUNT_CHOICES.map(c => `<option value="${c}">${c}回</option>`).join("");
+minSel.innerHTML = MIN_CHOICES.map(m => `<option value="${m}">${m}分</option>`).join("");
+countSel.value = settings.count; minSel.value = settings.min;
+countSel.addEventListener("change", () => {
+  settings.count = +countSel.value; saveSettings();
+  fitCount(); save(); renderTickets(); render();
+});
+minSel.addEventListener("change", () => {
+  settings.min = +minSel.value; saveSettings();
+  // いま みている回は そのまま。つぎの回から あたらしい時間
+  renderTickets(); render();
+});
+
+renderTickets();
+tick();
+setInterval(tick, 1000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") tick(); });
+
+// ---- ページを開いている間は画面を消さない（Screen Wake Lock。対応ブラウザのみ） ----
+const wakeEl = $("wake");
+let wakeLock = null;
+async function keepAwake() {
+  if (!("wakeLock" in navigator)) { wakeEl.textContent = "画面スリープ：端末の設定どおり"; return; }
+  if (document.visibilityState !== "visible" || (wakeLock && !wakeLock.released)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeEl.textContent = "画面スリープ：しない";
+    wakeLock.addEventListener("release", () => { wakeEl.textContent = "画面スリープ：端末の設定どおり"; });
+  } catch (e) {
+    wakeEl.textContent = "画面スリープ：端末の設定どおり";
+  }
+}
+keepAwake();
+document.addEventListener("visibilitychange", keepAwake);
+document.addEventListener("click", keepAwake);
+
+// ---- 全画面ボタン（対応ブラウザのみ表示） ----
+const fsBtn = $("fullscreen");
+if (document.fullscreenEnabled && document.documentElement.requestFullscreen) {
+  fsBtn.hidden = false;
+  fsBtn.addEventListener("click", () => {
+    const p = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    if (p && p.catch) p.catch(() => {});
+  });
+  document.addEventListener("fullscreenchange", () => { fsBtn.textContent = document.fullscreenElement ? "全画面をやめる" : "全画面"; });
+}
+</script>
+
+</body>
+</html>
