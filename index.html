@@ -9,50 +9,45 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
 <style>
-/* タブレット用：ボードだけを表示する版 */
+/* タブレット用：ボードと設定画面。色はテーマごとに JS で --t-* を差し替える */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-body { margin: 0; }
-[hidden] { display: none !important; }
 :root {
-  --page: #fbf1f5;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+  --page: var(--t-page, #fbf1f5);
   --ink: #23282e;
   --muted: #5b6570;
-  --line: #d3d9df;
+  --line: #d9cfd4;
   --panel: #ffffff;
-  /* physical board colors stay the same in both themes */
-  --board: #fffbfd;
-  --frame: #f1c3d2;
-  --frame-dark: #dd9fb5;
+  /* ボード（実物のホワイトボード）の色はどのテーマでも明るいまま */
+  --board: var(--t-board, #fffbfd);
+  --frame: var(--t-frame, #f1c3d2);
+  --frame-dark: var(--t-frame-dark, #dd9fb5);
   --board-ink: #2a2f35;
+  --accent: var(--t-accent, #e8628f);
+  --accent-soft: var(--t-soft, #fde7ef);
+  --accent-line: var(--t-line, #f6c9d8);
+  --card-edge: var(--t-card-edge, #f3dbe4);
+  --goal: var(--t-goal, #fff2f7);
+  --goal-edge: var(--t-goal-edge, #f3a6c0);
+  --goal-ink: var(--t-goal-ink, #94405f);
   --hour: #e0473c;
   --minute: #2f6fd6;
-  --pink: #e8628f;
-  --pink-soft: #fde7ef;
-  --pink-line: #f6c9d8;
-  --done: #e8628f;
-  --done-soft: #fde7ef;
   --late: #d42a3c;
   --late-soft: #ffe6e8;
   --card: #ffffff;
-  --card-edge: #f3dbe4;
-  --goal: #fff2f7;
-  --goal-edge: #f3a6c0;
   --f-board: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Noto Sans JP", sans-serif;
   --f-body: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --page: #1f181c; --ink: #f1e8ec; --muted: #b8a6ae; --line: #3a2e34; --panel: #2a2126;
-    color-scheme: dark;
-  }
+  :root:not([data-theme="light"]) { --page: #1f1b1d; --ink: #f1eaed; --muted: #b5a9ae; --line: #3c3337; --panel: #2a2427; color-scheme: dark; }
 }
-:root[data-theme="dark"] {
-  --page: #1f181c; --ink: #f1e8ec; --muted: #b8a6ae; --line: #3a2e34; --panel: #2a2126;
-  color-scheme: dark;
-}
-body { background: var(--page); color: var(--ink); font-family: var(--f-body); line-height: 1.7; }
+:root[data-theme="dark"] { --page: #1f1b1d; --ink: #f1eaed; --muted: #b5a9ae; --line: #3c3337; --panel: #2a2427; color-scheme: dark; }
+body { margin: 0; background: var(--page); color: var(--ink); font-family: var(--f-body); line-height: 1.7; font-size: 14px; }
+[hidden] { display: none !important; }
+button { font: inherit; }
+
 .wrap {
   max-width: 1080px; margin: 0 auto;
   padding-block: 28px 56px;
@@ -60,50 +55,48 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: grid; gap: 28px;
 }
-.intro h1 { font-family: var(--f-board); font-size: 1.5rem; margin: 0; text-wrap: balance; }
-.intro p { margin: 4px 0 0; color: var(--muted); font-size: .9rem; }
 
-/* ---- whiteboard ---- */
+/* ---- ホワイトボード ---- */
 .board {
-  background: var(--board);
-  color: var(--board-ink);
-  border: 12px solid var(--frame);
-  border-bottom-width: 18px;
-  border-bottom-color: var(--frame-dark);
+  background: var(--board); color: var(--board-ink);
+  border: 12px solid var(--frame); border-bottom-width: 18px; border-bottom-color: var(--frame-dark);
   border-radius: 6px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.18), inset 0 0 0 1px rgba(0,0,0,.04);
+  box-shadow: 0 10px 30px rgba(0,0,0,.14), inset 0 0 0 1px rgba(0,0,0,.04);
   padding: clamp(14px, 3vw, 28px);
   display: grid; gap: 18px;
   font-family: var(--f-board);
 }
-.now { display: grid; justify-items: center; gap: 6px; background: #fff; border: 2px solid var(--pink-line); border-radius: 24px; padding: clamp(46px, 7vw, 64px) 28px 12px; }
+.board-head { display: grid; justify-items: center; gap: 12px; text-align: center; }
+.board-head h2 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.3rem); font-weight: 900; letter-spacing: .06em; text-wrap: balance; }
+.board-head h2 .deco { color: var(--accent); font-size: .6em; vertical-align: .35em; margin: 0 .4em; }
+.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; font-size: .85rem; font-weight: 700; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; height: 5px; border-radius: 3px; }
+.legend .h i { width: 16px; background: var(--hour); }
+.legend .m i { width: 26px; background: var(--minute); }
+
+.now { display: grid; justify-items: center; gap: 6px; background: #fff; border: 2px solid var(--accent-line); border-radius: 24px; padding: 14px 28px 12px; }
+.now.has-ears { padding-top: clamp(46px, 7vw, 64px); }
+.now .clock { width: clamp(150px, 26vw, 210px); max-width: none; }
+.now-text { display: flex; align-items: baseline; gap: 10px; }
+.now-text b { font-size: 1.05rem; font-weight: 900; }
+.now-text span { font-size: .95rem; font-weight: 700; color: #6b747d; font-variant-numeric: tabular-nums; }
 .bunny { position: relative; }
 .bunny svg { position: relative; z-index: 1; }
 .bunny::before, .bunny::after {
   content: ""; position: absolute; top: -27%; width: 21%; height: 40%; z-index: 0;
   border: 3px solid #2a2f35; border-radius: 50% 50% 45% 45%;
-  background: radial-gradient(ellipse 36% 60% at 50% 58%, #f7b6ca 98%, #fff 100%);
+  background: radial-gradient(ellipse 36% 60% at 50% 58%, var(--accent-line) 98%, #fff 100%);
 }
 .bunny::before { left: 23%; transform: rotate(-14deg); }
 .bunny::after { right: 23%; transform: rotate(14deg); }
-.now .clock { width: clamp(150px, 26vw, 210px); max-width: none; }
-.now-text { display: flex; align-items: baseline; gap: 10px; }
-.now-text b { font-size: 1.05rem; font-weight: 900; }
-.now-text span { font-size: .95rem; font-weight: 700; color: #6b747d; font-variant-numeric: tabular-nums; }
-.step { position: relative; }
-.step.current .clock svg circle:first-of-type { stroke: var(--pink); stroke-width: 5; }
-.step.current::before, .step.late::before { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 3; color: #fff; font-size: .75rem; font-weight: 900; padding: 1px 10px; border-radius: 999px; white-space: nowrap; }
-.step.current::before { content: "♥ いま"; background: var(--pink); }
-.step.late::before { content: "じかん すぎたよ"; background: var(--late); }
-.step.late .clock svg circle:first-of-type { stroke: var(--late); stroke-width: 5; }
-.step.late .time { color: var(--late); }
-.step.late .front { border: 3px solid var(--late); background: var(--late-soft); }
+
 .now-float {
   position: fixed; z-index: 20; left: 50%;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   display: flex; align-items: center; gap: 10px;
   background: #fff; color: var(--board-ink); font-family: var(--f-board);
-  border: 2px solid var(--pink-line); border-radius: 999px; padding: 6px 18px 6px 6px;
+  border: 2px solid var(--accent-line); border-radius: 999px; padding: 6px 18px 6px 6px;
   box-shadow: 0 6px 20px rgba(0,0,0,.18);
   opacity: 0; visibility: hidden; transform: translate(-50%, -12px);
   transition: opacity .2s, transform .2s, visibility .2s;
@@ -112,86 +105,136 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
 .now-float .clock { width: clamp(84px, 18vw, 110px); max-width: none; flex: none; }
 .now-float b { display: block; font-size: .85rem; font-weight: 900; white-space: nowrap; }
 .now-float span { font-size: 1.1rem; font-weight: 900; color: #4a535c; font-variant-numeric: tabular-nums; }
-.board-head { display: grid; justify-items: center; gap: 12px; text-align: center; }
-.goal.current { border-style: solid; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(232,98,143,.2); }
-.board-head h2::before, .board-head h2::after { content: "♡"; color: var(--pink); font-size: .6em; vertical-align: .35em; margin: 0 .4em; }
-.board-head h2 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.3rem); font-weight: 900; letter-spacing: .06em; }
-.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; font-size: .85rem; font-weight: 700; }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
-.legend i { display: inline-block; height: 5px; border-radius: 3px; }
-.legend .h i { width: 16px; background: var(--hour); }
-.legend .m i { width: 26px; background: var(--minute); }
 
-.steps { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(10px, 1.6vw, 18px); }
-@media (max-width: 860px) { .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 460px) { .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.steps { display: grid; grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr)); gap: clamp(10px, 1.6vw, 18px); }
+@media (max-width: 860px) { .steps { grid-template-columns: repeat(var(--cols-m, 3), minmax(0, 1fr)); } }
+@media (max-width: 460px) { .steps { grid-template-columns: repeat(var(--cols-s, 2), minmax(0, 1fr)); } }
 
-.step { display: grid; gap: 8px; justify-items: center; }
+.step { position: relative; display: grid; gap: 8px; justify-items: center; align-content: start; }
 .clock { width: 100%; max-width: 128px; aspect-ratio: 1; }
 .clock svg { width: 100%; height: 100%; display: block; }
 .time { font-size: .8rem; font-weight: 700; color: #6b747d; font-variant-numeric: tabular-nums; }
+.step.current .clock svg circle:first-of-type { stroke: var(--accent); stroke-width: 5; }
+.step.current::before, .step.late::before { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 3; color: #fff; font-size: .75rem; font-weight: 900; padding: 1px 10px; border-radius: 999px; white-space: nowrap; }
+.step.current::before { content: "いま"; background: var(--accent); }
+.step.late::before { content: "じかん すぎたよ"; background: var(--late); }
+.step.late .clock svg circle:first-of-type { stroke: var(--late); stroke-width: 5; }
+.step.late .time { color: var(--late); }
+.step.late .front { border: 3px solid var(--late); background: var(--late-soft); }
 
 .card {
-  width: 100%; max-width: 140px; aspect-ratio: 1;
-  perspective: 700px; border: 0; padding: 0; background: none; cursor: pointer;
-  font: inherit; color: inherit;
+  display: block; width: 100%; max-width: 140px; aspect-ratio: 1;
+  perspective: 700px; border: 0; padding: 0; background: none; cursor: pointer; color: inherit;
 }
-.card:focus-visible { outline: 3px solid var(--pink); outline-offset: 4px; border-radius: 14px; }
-.card { display: block; }
+.card:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: 14px; }
 .flip { display: block; position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .5s cubic-bezier(.3,.7,.3,1.2); }
 .card[aria-pressed="true"] .flip { transform: rotateY(180deg); }
 .face {
   position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
-  border-radius: 14px; display: grid; place-items: center; align-content: center; gap: 2px;
+  border-radius: 14px; display: grid; place-items: center; align-content: center; gap: 2px; overflow: visible;
   box-shadow: 0 3px 0 rgba(0,0,0,.08), 0 6px 14px rgba(0,0,0,.08);
 }
 .front { background: var(--card); border: 2px solid var(--card-edge); }
 .front .pic { font-size: clamp(2.2rem, 6vw, 3.2rem); line-height: 1.1; }
-.front .word { font-size: clamp(.85rem, 2vw, 1.1rem); font-weight: 900; letter-spacing: .02em; text-align: center; line-height: 1.3; padding: 0 6px; white-space: pre-line; }
-.back { background: var(--done-soft); border: 2px solid var(--done); color: var(--done); transform: rotateY(180deg); }
+.front .photo { width: 62%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; display: block; }
+.front .word { font-size: clamp(.85rem, 2vw, 1.1rem); font-weight: 900; letter-spacing: .02em; text-align: center; line-height: 1.3; padding: 0 6px; white-space: pre-line; overflow-wrap: anywhere; }
+.back { background: var(--accent-soft); border: 2px solid var(--accent); color: var(--accent); transform: rotateY(180deg); }
 .back .stamp { font-size: clamp(2.2rem, 6vw, 3rem); line-height: 1; }
-.back .word { font-size: clamp(1rem, 2.4vw, 1.25rem); font-weight: 900; }
-.magnet { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); z-index: 2; color: var(--pink); font-size: 20px; line-height: 1; text-shadow: 0 2px 2px rgba(0,0,0,.15); }
-.magnet::before { content: "♥"; }
+.back .word { font-size: clamp(1rem, 2.4vw, 1.25rem); font-weight: 900; text-align: center; padding: 0 6px; }
+.magnet { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); z-index: 2; color: var(--accent); font-size: 20px; line-height: 1; text-shadow: 0 2px 2px rgba(0,0,0,.15); }
 
 .goal {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 24px;
   background: var(--goal); border: 3px dashed var(--goal-edge); border-radius: 16px; padding: 14px 18px;
 }
+.goal.current { border-style: solid; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
 .goal .clock { width: 96px; flex: none; }
 .goal-text { display: grid; gap: 2px; text-align: center; }
 .goal-text strong { font-size: clamp(1.4rem, 3.6vw, 1.9rem); font-weight: 900; letter-spacing: .08em; }
-.goal-text span { font-size: .9rem; font-weight: 700; color: #94405f; }
+.goal-text span { font-size: .9rem; font-weight: 700; color: var(--goal-ink); }
 .stickers { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-.slot { display: grid; justify-items: center; gap: 2px; border: 0; padding: 0; background: none; font: inherit; color: #94405f; cursor: pointer; }
+.slot { display: grid; justify-items: center; gap: 2px; border: 0; padding: 0; background: none; color: var(--goal-ink); cursor: pointer; }
 .slot .seal { width: 48px; height: 48px; border-radius: 50%; border: 2px dashed var(--goal-edge); background: rgba(255,255,255,.6); display: grid; place-items: center; font-size: 1.6rem; line-height: 1; }
 .slot .day { font-size: .75rem; font-weight: 900; }
 .slot[aria-pressed="true"] .seal { border-style: solid; background: #fff; animation: pop .35s cubic-bezier(.3,.7,.3,1.6); }
-.slot:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; border-radius: 12px; }
+.slot:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 12px; }
 @keyframes pop { from { transform: scale(.4) rotate(-20deg); } to { transform: scale(1) rotate(0); } }
 
 .board-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: .8rem; color: #6b747d; }
-.reset { font: inherit; font-weight: 700; font-size: .8rem; border: 1px solid var(--pink-line); background: #fff; color: #4a535c; border-radius: 999px; padding: 4px 14px; cursor: pointer; }
-.reset:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
 .foot-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .wake { font-size: .75rem; font-weight: 700; color: #6b747d; }
+.pill { position: relative; overflow: hidden; font-weight: 700; font-size: .8rem; border: 1px solid var(--accent-line); background: #fff; color: #4a535c; border-radius: 999px; padding: 4px 14px; cursor: pointer; }
+.pill:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.pill .fill { position: absolute; inset: 0; background: var(--accent-soft); transform-origin: left; transform: scaleX(0); z-index: 0; }
+.pill span { position: relative; z-index: 1; }
+.pill.holding .fill { transform: scaleX(1); transition: transform .8s linear; }
 
-/* ---- notes ---- */
-.notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-@media (max-width: 800px) { .notes { grid-template-columns: 1fr; } }
-.note { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; min-width: 0; }
-.note h3 { margin: 0 0 6px; font-family: var(--f-board); font-size: 1.05rem; }
-.note p, .note li { font-size: .9rem; margin: 0; }
-.note ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
-.note .tag { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .08em; color: var(--muted); margin-bottom: 2px; }
-.mini-card { display: flex; gap: 10px; margin-top: 10px; }
-.mini-card div { flex: 1; aspect-ratio: 1; max-width: 84px; border-radius: 10px; display: grid; place-items: center; align-content: center; font-family: var(--f-board); font-weight: 900; font-size: .8rem; }
-.mini-card .f { background: #fff; color: #2a2f35; border: 2px solid var(--card-edge); }
-.mini-card .b { background: var(--done-soft); color: var(--done); border: 2px solid var(--done); }
-.mini-card em { font-style: normal; font-size: 1.6rem; line-height: 1.1; }
-.small { color: var(--muted); font-size: .8rem !important; margin-top: 8px !important; }
+/* ---- 設定画面 ---- */
+dialog.settings {
+  width: min(760px, calc(100% - 24px)); max-height: calc(100% - 24px);
+  padding: 0; border: 1px solid var(--line); border-radius: 14px;
+  background: var(--panel); color: var(--ink);
+}
+dialog.settings::backdrop { background: rgba(30, 20, 25, .45); }
+.set-form { display: grid; grid-template-rows: auto 1fr auto; max-height: calc(100vh - 24px); }
+.set-head, .set-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; }
+.set-head { border-bottom: 1px solid var(--line); }
+.set-head h2 { margin: 0; font-family: var(--f-board); font-size: 1.25rem; }
+.set-foot { border-top: 1px solid var(--line); flex-wrap: wrap; }
+.set-body { overflow-y: auto; padding: 8px 20px 20px; display: grid; gap: 4px; }
+.set-sec { display: grid; gap: 10px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.set-sec:last-child { border-bottom: 0; }
+.set-sec h3 { margin: 0; font-family: var(--f-board); font-size: 1.05rem; }
+.hint { margin: 0; font-size: .8rem; color: var(--muted); }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > span { font-size: .8rem; font-weight: 700; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.check { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
+input[type="text"], input[type="time"], select, textarea {
+  font: inherit; font-size: 1rem; color: var(--ink); background: var(--page);
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; min-width: 0;
+}
+textarea { resize: vertical; line-height: 1.4; }
+input[type="color"] { width: 48px; height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: var(--page); }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.emoji-in { width: 4.2em; text-align: center; font-size: 1.3rem !important; }
+.btn { font-weight: 700; font-size: .9rem; border: 1px solid var(--line); background: var(--page); color: var(--ink); border-radius: 8px; padding: 6px 14px; cursor: pointer; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.danger { color: var(--late); }
+.btn.small { font-size: .8rem; padding: 4px 10px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.swatch { display: inline-flex; align-items: center; gap: 8px; border: 2px solid var(--line); border-radius: 999px; padding: 4px 12px 4px 4px; cursor: pointer; font-weight: 700; }
+.swatch input { position: absolute; opacity: 0; pointer-events: none; }
+.swatch i { width: 26px; height: 26px; border-radius: 50%; border: 4px solid; display: inline-block; }
+.swatch:has(input:checked) { border-color: var(--ink); }
+.swatch:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.task-list, .seal-list { display: grid; gap: 10px; }
+.task-row {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 10px; align-items: start;
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px;
+}
+.task-pic { width: 64px; height: 64px; border-radius: 10px; border: 1px solid var(--line); background: #fff; display: grid; place-items: center; font-size: 2rem; overflow: hidden; }
+.task-pic img { width: 100%; height: 100%; object-fit: cover; }
+.task-fields { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 10px; align-items: end; min-width: 0; }
+.task-fields .photo-tools { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 560px) {
+  .task-row { grid-template-columns: 52px minmax(0, 1fr); }
+  .task-pic { width: 52px; height: 52px; font-size: 1.6rem; }
+  .task-row .del { grid-column: 2; justify-self: end; }
+  .task-fields { grid-template-columns: auto minmax(0, 1fr); }
+  .task-fields .t-time { grid-column: 1 / -1; }
+}
+.seal-row { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: end; }
+.seal-row .field:first-child input { width: 6em; }
+.msg { font-size: .85rem; font-weight: 700; color: var(--late); margin: 0; }
+.msg.ok { color: var(--muted); }
 
-@media (prefers-reduced-motion: reduce) { .now-float { transition: none; } .flip { transition: none; } .slot[aria-pressed="true"] .seal { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .now-float, .flip { transition: none; }
+  .slot[aria-pressed="true"] .seal { animation: none; }
+  .pill.holding .fill { transition: none; }
+}
 </style>
 </head>
 <body>
@@ -202,12 +245,11 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
 </div>
 
 <div class="wrap">
-
   <section class="board" aria-label="あさの じゅんび ボード">
     <div class="board-head">
-      <h2>あさの じゅんび</h2>
-      <div class="now">
-        <div class="clock bunny" id="now-clock"></div>
+      <h2 id="board-title"></h2>
+      <div class="now" id="now-box">
+        <div class="clock" id="now-clock"></div>
         <div class="now-text"><b>いまの とけい</b><span id="now-digital"></span></div>
       </div>
       <div class="legend" aria-label="針の色">
@@ -219,10 +261,10 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
     <div class="steps" id="steps"></div>
 
     <div class="goal" id="goal">
-      <div class="clock" data-h="8" data-m="0"></div>
+      <div class="clock" id="goal-clock"></div>
       <div class="goal-text">
-        <strong>🐰 しゅっぱつ！</strong>
-        <span>8:00 までに ぜんぶ くるっ としたら シールを ぺたっ</span>
+        <strong id="goal-name"></strong>
+        <span id="goal-sub"></span>
       </div>
       <div class="stickers" id="stickers" aria-label="ごほうびシール"></div>
     </div>
@@ -231,173 +273,548 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
       <span>※ 時刻は「この時間までに おわらせる」時刻です。</span>
       <div class="foot-tools">
         <span class="wake" id="wake">画面スリープ：確認中</span>
-        <button class="reset" id="fullscreen" type="button" hidden>全画面</button>
-        <button class="reset" id="reset" type="button">ぜんぶ表にもどす</button>
+        <button class="pill" id="fullscreen" type="button" hidden><span>全画面</span></button>
+        <button class="pill" id="reset" type="button"><span>ぜんぶ表にもどす</span></button>
+        <button class="pill" id="open-settings" type="button" title="長押しで設定を開きます"><i class="fill"></i><span>⚙ 設定（長押し）</span></button>
       </div>
     </div>
   </section>
-
 </div>
 
+<dialog class="settings" id="settings" aria-labelledby="set-title">
+  <form class="set-form" id="set-form" method="dialog">
+    <div class="set-head">
+      <h2 id="set-title">設定</h2>
+      <button class="btn small" type="button" data-act="cancel">とじる</button>
+    </div>
+
+    <div class="set-body">
+      <section class="set-sec">
+        <h3>ボード</h3>
+        <label class="field"><span>タイトル</span><input type="text" id="s-title" maxlength="20"></label>
+        <div class="field"><span>色</span><div class="swatches" id="s-themes"></div></div>
+        <div class="row">
+          <label class="check"><input type="checkbox" id="s-ears"> いまの時計に うさぎの耳を付ける</label>
+          <label class="field"><span>カードを留めるマグネットの形</span>
+            <select id="s-magnet">
+              <option value="heart">ハート ♥</option>
+              <option value="star">ほし ★</option>
+              <option value="dot">まる ●</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="set-sec">
+        <h3>やること</h3>
+        <p class="hint">時刻は「この時間までに おわらせる」時刻です。保存すると時刻の早い順に並びます。絵は絵文字か写真のどちらかを使います。名前は改行すると2行で表示されます。</p>
+        <div class="task-list" id="s-tasks"></div>
+        <div><button class="btn" type="button" data-act="add-task">＋ やることを追加</button></div>
+      </section>
+
+      <section class="set-sec">
+        <h3>しゅっぱつ（ゴール）</h3>
+        <div class="row">
+          <label class="field"><span>絵文字</span><input type="text" class="emoji-in" id="s-goal-pic" maxlength="8"></label>
+          <label class="field"><span>ことば</span><input type="text" id="s-goal-name" maxlength="16"></label>
+          <label class="field"><span>時刻</span><input type="time" id="s-goal-time" required></label>
+        </div>
+      </section>
+
+      <section class="set-sec">
+        <h3>カードの裏</h3>
+        <div class="row">
+          <label class="field"><span>絵文字</span><input type="text" class="emoji-in" id="s-done-stamp" maxlength="8"></label>
+          <label class="field"><span>ことば</span><input type="text" id="s-done-text" maxlength="12"></label>
+        </div>
+      </section>
+
+      <section class="set-sec">
+        <h3>時間の目印</h3>
+        <label class="field"><span>「いま」の目印を出しはじめる時刻</span><input type="time" id="s-now-from" required></label>
+        <label class="check"><input type="checkbox" id="s-late-on"> 時刻を過ぎても裏返していないカードを赤くする</label>
+        <div class="row">
+          <label class="field"><span>赤くする判定のはじまり</span><input type="time" id="s-late-from"></label>
+          <label class="field"><span>おわり</span><input type="time" id="s-late-until"></label>
+        </div>
+      </section>
+
+      <section class="set-sec">
+        <h3>時計の針の色</h3>
+        <p class="hint">家の時計の針に貼るシールの色と合わせると、見比べやすくなります。</p>
+        <div class="row">
+          <label class="field"><span>みじかい はり</span><input type="color" id="s-hour"></label>
+          <label class="field"><span>ながい はり</span><input type="color" id="s-minute"></label>
+        </div>
+      </section>
+
+      <section class="set-sec">
+        <h3>ごほうびシール</h3>
+        <p class="hint">しゅっぱつ欄に並ぶ丸です。タップすると絵文字のシールが貼られます。</p>
+        <div class="seal-list" id="s-seals"></div>
+        <div class="row">
+          <button class="btn" type="button" data-act="add-seal">＋ シールの丸を追加</button>
+          <button class="btn" type="button" data-act="clear-seals">貼ったシールをぜんぶはがす</button>
+        </div>
+      </section>
+
+      <section class="set-sec">
+        <h3>データ</h3>
+        <p class="hint">設定はこの端末のブラウザの中だけに保存されます。別の端末に移すときは、ファイルに書き出して読み込みます。</p>
+        <div class="row">
+          <button class="btn" type="button" data-act="export">ファイルに書き出す</button>
+          <button class="btn" type="button" data-act="import">ファイルから読み込む</button>
+          <button class="btn danger" type="button" data-act="defaults" id="s-defaults">はじめの設定に戻す</button>
+        </div>
+        <input type="file" id="s-import-file" accept="application/json,.json" hidden>
+      </section>
+    </div>
+
+    <div class="set-foot">
+      <p class="msg" id="s-msg" role="status"></p>
+      <div class="row">
+        <button class="btn" type="button" data-act="cancel">キャンセル</button>
+        <button class="btn primary" type="button" data-act="save">保存</button>
+      </div>
+    </div>
+  </form>
+  <input type="file" id="s-photo-file" accept="image/*" hidden>
+</dialog>
+
 <script>
-// h:m は「この時間までに おわらせる」時刻
-const STEPS = [
-  { h: 7, m: 0,  pic: "🌞", word: "おきる" },
-  { h: 7, m: 10, pic: "🚽", word: "トイレ\nおむつ" },
-  { h: 7, m: 30, pic: "🍚", word: "ごはん" },
-  { h: 7, m: 40, pic: "🪥", word: "はみがき" },
-  { h: 7, m: 50, pic: "👕", word: "きがえ" },
-  { h: 7, m: 55, pic: "🎀", word: "かみのけ" },
-];
-const GOAL = 8 * 60;           // 8:00 しゅっぱつ
-const DAY_START = 6 * 60 + 30; // 6:30 から「いま」を出す
-const LATE_FROM = 7 * 60, LATE_UNTIL = 9 * 60; // 「じかん すぎたよ」は 7:00〜9:00 の間だけ
-const SEALS = [
-  { day: "げつ", seal: "🐰" }, { day: "か", seal: "💗" }, { day: "すい", seal: "🎀" },
-  { day: "もく", seal: "🌸" }, { day: "きん", seal: "🍓" },
-];
-const KEY = "asa-board-v2";
-const today = () => new Date().toDateString();
-function load() {
-  try { const v = JSON.parse(localStorage.getItem(KEY)); if (v) return v; } catch (e) {}
-  return { date: today(), done: STEPS.map(() => false), seals: SEALS.map(() => false) };
+/* ================= 設定 ================= */
+const THEMES = {
+  pink: { name: "ピンク", accent: "#e8628f", soft: "#fde7ef", line: "#f6c9d8", frame: "#f1c3d2", frameDark: "#dd9fb5", board: "#fffbfd", page: "#fbf1f5", goal: "#fff2f7", goalEdge: "#f3a6c0", goalInk: "#94405f", cardEdge: "#f3dbe4" },
+  sky:  { name: "そら",   accent: "#3d8bd9", soft: "#e3f0fc", line: "#bcd8f3", frame: "#b9d3ec", frameDark: "#8fb3d6", board: "#fbfdff", page: "#eef5fb", goal: "#eef6fe", goalEdge: "#9cc4ea", goalInk: "#2f5d86", cardEdge: "#d8e6f3" },
+  mint: { name: "みどり", accent: "#2e9e78", soft: "#e0f5ec", line: "#b6e2cf", frame: "#b5dcc9", frameDark: "#88bfa6", board: "#fbfefc", page: "#eef7f2", goal: "#eefaf4", goalEdge: "#8fd0b3", goalInk: "#2b6a52", cardEdge: "#d4ebe0" },
+  sun:  { name: "おひさま", accent: "#e08a1e", soft: "#fff0dc", line: "#f6d6a8", frame: "#efd3a4", frameDark: "#d9b57a", board: "#fffdf8", page: "#fbf5ea", goal: "#fff6e6", goalEdge: "#f0c37a", goalInk: "#8a5414", cardEdge: "#f1e2c8" },
+  gray: { name: "シンプル", accent: "#5a6b7d", soft: "#e9edf1", line: "#cfd7df", frame: "#a9b2bb", frameDark: "#7f8992", board: "#fbfcfd", page: "#eef1f4", goal: "#f4f6f8", goalEdge: "#b4bec8", goalInk: "#4a5866", cardEdge: "#e3e7eb" },
+};
+const MAGNETS = { heart: { pin: "♥", deco: "♡" }, star: { pin: "★", deco: "☆" }, dot: { pin: "●", deco: "○" } };
+const MAX_TASKS = 10, MAX_SEALS = 7;
+
+const uid = () => Math.random().toString(36).slice(2, 9);
+const DEFAULTS = () => ({
+  version: 1,
+  title: "あさの じゅんび",
+  theme: "pink", ears: true, magnet: "heart",
+  tasks: [
+    { id: uid(), pic: "🌞", img: "", name: "おきる",         time: "07:00" },
+    { id: uid(), pic: "🚽", img: "", name: "トイレ\nおむつ", time: "07:10" },
+    { id: uid(), pic: "🍚", img: "", name: "ごはん",         time: "07:30" },
+    { id: uid(), pic: "🪥", img: "", name: "はみがき",       time: "07:40" },
+    { id: uid(), pic: "👕", img: "", name: "きがえ",         time: "07:50" },
+    { id: uid(), pic: "🎀", img: "", name: "かみのけ",       time: "07:55" },
+  ],
+  goal: { pic: "🐰", name: "しゅっぱつ！", time: "08:00" },
+  done: { stamp: "💗", text: "できた！" },
+  nowFrom: "06:30",
+  late: { on: true, from: "07:00", until: "09:00" },
+  hands: { hour: "#e0473c", minute: "#2f6fd6" },
+  seals: [
+    { label: "げつ", seal: "🐰" }, { label: "か", seal: "💗" }, { label: "すい", seal: "🎀" },
+    { label: "もく", seal: "🌸" }, { label: "きん", seal: "🍓" },
+  ],
+});
+
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+const str = (v, d, max) => (typeof v === "string" ? v : d).slice(0, max);
+const time = (v, d) => (typeof v === "string" && TIME_RE.test(v) ? v : d);
+const color = (v, d) => (typeof v === "string" && COLOR_RE.test(v) ? v : d);
+const img = v => (typeof v === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(v) ? v : "");
+
+// 読み込んだ設定を、足りない所は初期値で埋めて安全な形にそろえる
+function normalize(c) {
+  const d = DEFAULTS();
+  if (!c || typeof c !== "object") return d;
+  const tasks = Array.isArray(c.tasks) ? c.tasks.slice(0, MAX_TASKS).map(t => ({
+    id: typeof t?.id === "string" && t.id ? t.id.slice(0, 20) : uid(),
+    pic: str(t?.pic, "⭐", 8), img: img(t?.img), name: str(t?.name, "", 40), time: time(t?.time, "07:00"),
+  })) : d.tasks;
+  const seals = Array.isArray(c.seals) ? c.seals.slice(0, MAX_SEALS).map(s => ({
+    label: str(s?.label, "", 6), seal: str(s?.seal, "⭐", 8),
+  })) : d.seals;
+  return {
+    version: 1,
+    title: str(c.title, d.title, 20),
+    theme: THEMES[c.theme] ? c.theme : d.theme,
+    ears: typeof c.ears === "boolean" ? c.ears : d.ears,
+    magnet: MAGNETS[c.magnet] ? c.magnet : d.magnet,
+    tasks: tasks.length ? sortTasks(tasks) : d.tasks,
+    goal: { pic: str(c.goal?.pic, d.goal.pic, 8), name: str(c.goal?.name, d.goal.name, 16), time: time(c.goal?.time, d.goal.time) },
+    done: { stamp: str(c.done?.stamp, d.done.stamp, 8), text: str(c.done?.text, d.done.text, 12) },
+    nowFrom: time(c.nowFrom, d.nowFrom),
+    late: { on: typeof c.late?.on === "boolean" ? c.late.on : d.late.on, from: time(c.late?.from, d.late.from), until: time(c.late?.until, d.late.until) },
+    hands: { hour: color(c.hands?.hour, d.hands.hour), minute: color(c.hands?.minute, d.hands.minute) },
+    seals,
+  };
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
-const state = load();
-if (!Array.isArray(state.done) || state.done.length !== STEPS.length) state.done = STEPS.map(() => false);
-if (!Array.isArray(state.seals) || state.seals.length !== SEALS.length) state.seals = SEALS.map(() => false);
-if (state.date !== today()) { state.date = today(); state.done = STEPS.map(() => false); save(); }
+const sortTasks = ts => ts.slice().sort((a, b) => toMin(a.time) - toMin(b.time));
+const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+
+/* ================= 保存 ================= */
+const CONFIG_KEY = "asa-board-config-v1";
+const STATE_KEY = "asa-board-state-v1";
+function readJSON(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+function writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+
+let config = normalize(readJSON(CONFIG_KEY) || DEFAULTS());
+const today = () => new Date().toDateString();
+let state = readJSON(STATE_KEY);
+if (!state || typeof state !== "object") {
+  // 前の版の記録（シール）があれば引き継ぐ
+  const old = readJSON("asa-board-v2");
+  state = { date: today(), done: {}, seals: Array.isArray(old?.seals) ? old.seals.map(Boolean) : [] };
+}
+if (typeof state.done !== "object" || Array.isArray(state.done) || !state.done) state.done = {};
+if (!Array.isArray(state.seals)) state.seals = [];
+const saveState = () => writeJSON(STATE_KEY, state);
+function rollDay() {
+  if (state.date !== today()) { state.date = today(); state.done = {}; saveState(); return true; }
+  return false;
+}
+rollDay();
+
+/* ================= 描画 ================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pad = n => String(n).padStart(2, "0");
+const fmt = t => { const [h, m] = t.split(":").map(Number); return `${h}:${pad(m)}`; };
 
 function clockSVG(h, m, label) {
-  const ticks = [];
+  let ticks = "", nums = "";
   for (let i = 0; i < 60; i++) {
-    const a = i * 6 * Math.PI / 180, big = i % 5 === 0;
-    const r1 = big ? 38 : 41, r2 = 44;
-    ticks.push(`<line x1="${50 + r1 * Math.sin(a)}" y1="${50 - r1 * Math.cos(a)}" x2="${50 + r2 * Math.sin(a)}" y2="${50 - r2 * Math.cos(a)}" stroke="#2a2f35" stroke-width="${big ? 1.8 : .6}" stroke-linecap="round"/>`);
+    const a = i * 6 * Math.PI / 180, big = i % 5 === 0, r1 = big ? 38 : 41, r2 = 44;
+    ticks += `<line x1="${50 + r1 * Math.sin(a)}" y1="${50 - r1 * Math.cos(a)}" x2="${50 + r2 * Math.sin(a)}" y2="${50 - r2 * Math.cos(a)}" stroke="#2a2f35" stroke-width="${big ? 1.8 : .6}" stroke-linecap="round"/>`;
   }
-  const nums = [];
   for (let n = 1; n <= 12; n++) {
-    const a = n * 30 * Math.PI / 180, r = 31, key = n % 3 === 0;
-    nums.push(`<text x="${50 + r * Math.sin(a)}" y="${50 - r * Math.cos(a)}" text-anchor="middle" dominant-baseline="central" font-family="Zen Maru Gothic, sans-serif" font-weight="${key ? 900 : 700}" font-size="${key ? 11 : 8}" fill="#2a2f35">${n}</text>`);
+    const a = n * 30 * Math.PI / 180, key = n % 3 === 0;
+    nums += `<text x="${50 + 31 * Math.sin(a)}" y="${50 - 31 * Math.cos(a)}" text-anchor="middle" dominant-baseline="central" font-family="Zen Maru Gothic, sans-serif" font-weight="${key ? 900 : 700}" font-size="${key ? 11 : 8}" fill="#2a2f35">${n}</text>`;
   }
   const ha = ((h % 12) + m / 60) * 30, ma = m * 6;
-  return `<svg viewBox="0 0 100 100" role="img" aria-label="${label || (h + '時' + (m ? m + '分' : ''))}">
-    <circle cx="50" cy="50" r="47" fill="#ffffff" stroke="#2a2f35" stroke-width="3"/>
-    ${ticks.join("")}${nums.join("")}
+  return `<svg viewBox="0 0 100 100" role="img" aria-label="${esc(label || (h + "時" + (m ? Math.floor(m) + "分" : "")))}">
+    <circle cx="50" cy="50" r="47" fill="#ffffff" stroke="#2a2f35" stroke-width="3"/>${ticks}${nums}
     <line x1="50" y1="50" x2="50" y2="25" stroke="var(--hour)" stroke-width="5.5" stroke-linecap="round" transform="rotate(${ha} 50 50)"/>
     <line x1="50" y1="50" x2="50" y2="12" stroke="var(--minute)" stroke-width="3.5" stroke-linecap="round" transform="rotate(${ma} 50 50)"/>
-    <circle cx="50" cy="50" r="3.5" fill="#2a2f35"/>
-  </svg>`;
+    <circle cx="50" cy="50" r="3.5" fill="#2a2f35"/></svg>`;
+}
+const clockAt = t => { const [h, m] = t.split(":").map(Number); return clockSVG(h, m); };
+
+function applyTheme() {
+  const t = THEMES[config.theme], r = document.documentElement.style;
+  const map = { accent: "--t-accent", soft: "--t-soft", line: "--t-line", frame: "--t-frame", frameDark: "--t-frame-dark", board: "--t-board", page: "--t-page", goal: "--t-goal", goalEdge: "--t-goal-edge", goalInk: "--t-goal-ink", cardEdge: "--t-card-edge" };
+  for (const k in map) r.setProperty(map[k], t[k]);
+  r.setProperty("--hour", config.hands.hour);
+  r.setProperty("--minute", config.hands.minute);
+  document.querySelector('meta[name="theme-color"]').setAttribute("content", t.frame);
 }
 
-const pad = n => String(n).padStart(2, "0");
-const stepsEl = document.getElementById("steps");
-stepsEl.innerHTML = STEPS.map((s, i) => `
-  <div class="step">
-    <div class="clock">${clockSVG(s.h, s.m)}</div>
-    <div class="time">${s.h}:${pad(s.m)} までに</div>
-    <button class="card" type="button" id="card-${i}" aria-pressed="${state.done[i]}" aria-label="${s.word.replace('\n', '・')}">
-      <span class="flip">
-        <span class="face front"><span class="magnet"></span><span class="pic">${s.pic}</span><span class="word">${s.word}</span></span>
-        <span class="face back"><span class="magnet"></span><span class="stamp">💗</span><span class="word">できた！</span></span>
-      </span>
-    </button>
-  </div>`).join("");
+let stepEls = [];
+function render() {
+  applyTheme();
+  const mg = MAGNETS[config.magnet];
+  $("board-title").innerHTML = `<span class="deco">${mg.deco}</span>${esc(config.title)}<span class="deco">${mg.deco}</span>`;
+  document.title = config.title.replace(/\s+/g, "") + "ボード";
+  $("now-box").classList.toggle("has-ears", config.ears);
+  $("now-clock").classList.toggle("bunny", config.ears);
 
-document.querySelectorAll(".goal .clock").forEach(el => el.innerHTML = clockSVG(+el.dataset.h, +el.dataset.m));
+  const n = config.tasks.length, cols = n <= 6 ? n : Math.ceil(n / 2);
+  const steps = $("steps");
+  steps.style.setProperty("--cols", cols);
+  steps.style.setProperty("--cols-m", Math.min(cols, 3));
+  steps.style.setProperty("--cols-s", Math.min(cols, 2));
+  steps.innerHTML = config.tasks.map(t => `
+    <div class="step" data-id="${esc(t.id)}">
+      <div class="clock">${clockAt(t.time)}</div>
+      <div class="time">${fmt(t.time)} までに</div>
+      <button class="card" type="button" aria-pressed="${!!state.done[t.id]}" aria-label="${esc(t.name.replace(/\n/g, "・") || "やること")}">
+        <span class="flip">
+          <span class="face front"><span class="magnet">${mg.pin}</span>${t.img ? `<img class="photo" src="${t.img}" alt="">` : `<span class="pic">${esc(t.pic)}</span>`}<span class="word">${esc(t.name)}</span></span>
+          <span class="face back"><span class="magnet">${mg.pin}</span><span class="stamp">${esc(config.done.stamp)}</span><span class="word">${esc(config.done.text)}</span></span>
+        </span>
+      </button>
+    </div>`).join("");
+  stepEls = [...steps.querySelectorAll(".step")];
 
-stepsEl.addEventListener("click", e => {
+  $("goal-clock").innerHTML = clockAt(config.goal.time);
+  $("goal-name").textContent = `${config.goal.pic} ${config.goal.name}`.trim();
+  $("goal-sub").textContent = `${fmt(config.goal.time)} までに ぜんぶ くるっ としたら シールを ぺたっ`;
+  $("stickers").hidden = config.seals.length === 0;
+  $("stickers").innerHTML = config.seals.map((s, i) => `
+    <button class="slot" type="button" data-i="${i}" aria-pressed="${!!state.seals[i]}" aria-label="${esc(s.label)}の シール">
+      <span class="seal">${state.seals[i] ? esc(s.seal) : ""}</span><span class="day">${esc(s.label)}</span>
+    </button>`).join("");
+  tick();
+}
+
+function tick() {
+  if (rollDay()) document.querySelectorAll(".card").forEach(c => c.setAttribute("aria-pressed", "false"));
+  const d = new Date(), h = d.getHours(), m = d.getMinutes(), mf = m + d.getSeconds() / 60;
+  $("now-clock").innerHTML = clockSVG(h, mf, `いま ${h}時${m}分`);
+  $("now-digital").textContent = `${h}:${pad(m)}`;
+  $("float-clock").innerHTML = clockSVG(h, mf, "");
+  $("float-digital").textContent = `${h}:${pad(m)}`;
+  const now = h * 60 + m, L = config.late;
+  const lateOn = L.on && now >= toMin(L.from) && now < toMin(L.until);
+  config.tasks.forEach((t, i) => {
+    const start = i === 0 ? toMin(config.nowFrom) : toMin(config.tasks[i - 1].time), end = toMin(t.time);
+    stepEls[i]?.classList.toggle("current", now >= start && now < end);
+    stepEls[i]?.classList.toggle("late", lateOn && now >= end && !state.done[t.id]);
+  });
+  const last = config.tasks[config.tasks.length - 1];
+  $("goal").classList.toggle("current", now >= toMin(last.time) && now < toMin(config.goal.time));
+}
+
+/* ================= ボードの操作 ================= */
+$("steps").addEventListener("click", e => {
   const card = e.target.closest(".card");
   if (!card) return;
-  const on = card.getAttribute("aria-pressed") !== "true";
+  const id = card.closest(".step").dataset.id, on = card.getAttribute("aria-pressed") !== "true";
   card.setAttribute("aria-pressed", on);
-  state.done[+card.id.split("-")[1]] = on; save();
+  if (on) state.done[id] = true; else delete state.done[id];
+  saveState(); tick();
+});
+$("stickers").addEventListener("click", e => {
+  const slot = e.target.closest(".slot");
+  if (!slot) return;
+  const i = +slot.dataset.i, on = !state.seals[i];
+  state.seals[i] = on; saveState();
+  slot.setAttribute("aria-pressed", on);
+  slot.querySelector(".seal").textContent = on ? config.seals[i].seal : "";
+});
+$("reset").addEventListener("click", () => {
+  state.done = {}; saveState();
+  document.querySelectorAll(".card").forEach(c => c.setAttribute("aria-pressed", "false"));
   tick();
 });
 
-const stickersEl = document.getElementById("stickers");
-stickersEl.innerHTML = SEALS.map((s, i) => `
-  <button class="slot" type="button" id="slot-${i}" aria-pressed="${state.seals[i]}" aria-label="${s.day}の シール">
-    <span class="seal">${state.seals[i] ? s.seal : ""}</span><span class="day">${s.day}</span>
-  </button>`).join("");
-stickersEl.addEventListener("click", e => {
-  const slot = e.target.closest(".slot");
-  if (!slot) return;
-  const i = +slot.id.split("-")[1], on = !state.seals[i];
-  state.seals[i] = on; save();
-  slot.setAttribute("aria-pressed", on);
-  slot.querySelector(".seal").textContent = on ? SEALS[i].seal : "";
-});
-
-const stepEls = [...document.querySelectorAll(".step")];
-function tick() {
-  if (state.date !== today()) {
-    state.date = today(); state.done = STEPS.map(() => false); save();
-    document.querySelectorAll(".card").forEach(c => c.setAttribute("aria-pressed", "false"));
-  }
-  const d = new Date();
-  const h = d.getHours(), m = d.getMinutes();
-  const mf = m + d.getSeconds() / 60;
-  document.getElementById("now-clock").innerHTML = clockSVG(h, mf, `いま ${h}時${m}分`);
-  document.getElementById("now-digital").textContent = `${h}:${pad(m)}`;
-  document.getElementById("float-clock").innerHTML = clockSVG(h, mf, "");
-  document.getElementById("float-digital").textContent = `${h}:${pad(m)}`;
-  const now = h * 60 + m;
-  // いま やること = まだ締め切りが来ていない最初のカード（前のカードの時刻〜このカードの時刻）
-  STEPS.forEach((s, i) => {
-    const start = i === 0 ? DAY_START : STEPS[i - 1].h * 60 + STEPS[i - 1].m;
-    const end = s.h * 60 + s.m;
-    stepEls[i].classList.toggle("current", now >= start && now < end);
-    stepEls[i].classList.toggle("late", now >= LATE_FROM && now < LATE_UNTIL && now >= end && !state.done[i]);
-  });
-  const last = STEPS[STEPS.length - 1];
-  document.getElementById("goal").classList.toggle("current", now >= last.h * 60 + last.m && now < GOAL);
-}
-tick();
-setInterval(tick, 5000);
-
 // まんなかの時計が画面から外れたら、上に小さな時計を出す
-const floatEl = document.getElementById("now-float");
 if ("IntersectionObserver" in window) {
-  new IntersectionObserver(([en]) => floatEl.classList.toggle("show", !en.isIntersecting && en.boundingClientRect.top < 0))
-    .observe(document.querySelector(".now"));
+  new IntersectionObserver(([en]) => $("now-float").classList.toggle("show", !en.isIntersecting && en.boundingClientRect.top < 0)).observe($("now-box"));
 }
 
 // ページを開いている間は画面を消さない（Screen Wake Lock。対応ブラウザのみ）
-const wakeEl = document.getElementById("wake");
 let wakeLock = null;
 async function keepAwake() {
-  if (!("wakeLock" in navigator)) { wakeEl.textContent = "画面スリープ：端末の設定どおり"; return; }
+  const el = $("wake");
+  if (!("wakeLock" in navigator)) { el.textContent = "画面スリープ：端末の設定どおり"; return; }
   if (document.visibilityState !== "visible" || (wakeLock && !wakeLock.released)) return;
   try {
     wakeLock = await navigator.wakeLock.request("screen");
-    wakeEl.textContent = "画面スリープ：しない";
-    wakeLock.addEventListener("release", () => { wakeEl.textContent = "画面スリープ：端末の設定どおり"; });
-  } catch (e) {
-    wakeEl.textContent = "画面スリープ：端末の設定どおり";
-  }
+    el.textContent = "画面スリープ：しない";
+    wakeLock.addEventListener("release", () => { el.textContent = "画面スリープ：端末の設定どおり"; });
+  } catch (e) { el.textContent = "画面スリープ：端末の設定どおり"; }
 }
-keepAwake();
 document.addEventListener("visibilitychange", keepAwake);
-document.addEventListener("click", keepAwake); // タップをきっかけに許可するブラウザ向け
+document.addEventListener("click", keepAwake);
 
 // 全画面ボタン（対応ブラウザのみ表示）
-const fsBtn = document.getElementById("fullscreen");
+const fsBtn = $("fullscreen");
 if (document.fullscreenEnabled && document.documentElement.requestFullscreen) {
   fsBtn.hidden = false;
   fsBtn.addEventListener("click", () => {
     const p = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
     if (p && p.catch) p.catch(() => {});
   });
-  document.addEventListener("fullscreenchange", () => { fsBtn.textContent = document.fullscreenElement ? "全画面をやめる" : "全画面"; });
+  document.addEventListener("fullscreenchange", () => { fsBtn.querySelector("span").textContent = document.fullscreenElement ? "全画面をやめる" : "全画面"; });
 }
 
-document.getElementById("reset").addEventListener("click", () => {
-  document.querySelectorAll(".card").forEach(c => c.setAttribute("aria-pressed", "false"));
-  state.done = STEPS.map(() => false); save();
-  tick();
-});
-</script>
+/* ================= 設定画面 ================= */
+const dlg = $("settings");
+let draft = null, photoTarget = null, confirmDefaults = false;
+const msg = (t, ok) => { $("s-msg").textContent = t || ""; $("s-msg").classList.toggle("ok", !!ok); };
 
+// 長押し（0.8秒）で開く。キーボードの Enter / Space はすぐ開く
+const gear = $("open-settings");
+let holdTimer = null;
+const stopHold = () => { clearTimeout(holdTimer); holdTimer = null; gear.classList.remove("holding"); };
+gear.addEventListener("pointerdown", e => {
+  if (e.button > 0) return;
+  gear.classList.add("holding");
+  holdTimer = setTimeout(() => { stopHold(); openSettings(); }, 800);
+});
+["pointerup", "pointerleave", "pointercancel"].forEach(ev => gear.addEventListener(ev, stopHold));
+gear.addEventListener("contextmenu", e => e.preventDefault());
+gear.addEventListener("click", e => { if (e.detail === 0) openSettings(); });
+
+function openSettings() {
+  draft = JSON.parse(JSON.stringify(config));
+  confirmDefaults = false;
+  $("s-defaults").textContent = "はじめの設定に戻す";
+  fillForm(); msg("");
+  if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+}
+function closeSettings() { if (dlg.close) dlg.close(); else dlg.removeAttribute("open"); draft = null; }
+dlg.addEventListener("cancel", () => { draft = null; });
+
+function fillForm() {
+  $("s-title").value = draft.title;
+  $("s-themes").innerHTML = Object.entries(THEMES).map(([k, t]) => `
+    <label class="swatch"><input type="radio" name="s-theme" value="${k}" ${k === draft.theme ? "checked" : ""}>
+      <i style="background:${t.soft};border-color:${t.accent}"></i>${t.name}</label>`).join("");
+  $("s-ears").checked = draft.ears;
+  $("s-magnet").value = draft.magnet;
+  $("s-goal-pic").value = draft.goal.pic;
+  $("s-goal-name").value = draft.goal.name;
+  $("s-goal-time").value = draft.goal.time;
+  $("s-done-stamp").value = draft.done.stamp;
+  $("s-done-text").value = draft.done.text;
+  $("s-now-from").value = draft.nowFrom;
+  $("s-late-on").checked = draft.late.on;
+  $("s-late-from").value = draft.late.from;
+  $("s-late-until").value = draft.late.until;
+  $("s-hour").value = draft.hands.hour;
+  $("s-minute").value = draft.hands.minute;
+  renderTaskRows(); renderSealRows();
+}
+function renderTaskRows() {
+  $("s-tasks").innerHTML = draft.tasks.map((t, i) => `
+    <div class="task-row" data-i="${i}">
+      <div class="task-pic">${t.img ? `<img src="${t.img}" alt="">` : esc(t.pic)}</div>
+      <div class="task-fields">
+        <label class="field"><span>絵文字</span><input type="text" class="emoji-in" data-k="pic" value="${esc(t.pic)}" maxlength="8" ${t.img ? "disabled" : ""}></label>
+        <label class="field"><span>名前</span><textarea rows="2" data-k="name" maxlength="40">${esc(t.name)}</textarea></label>
+        <label class="field t-time"><span>までに</span><input type="time" data-k="time" value="${t.time}" required></label>
+        <div class="photo-tools">
+          <button class="btn small" type="button" data-act="photo">${t.img ? "写真を変える" : "写真を使う"}</button>
+          ${t.img ? `<button class="btn small" type="button" data-act="unphoto">写真をやめて絵文字にする</button>` : ""}
+        </div>
+      </div>
+      <button class="btn small danger del" type="button" data-act="del-task" ${draft.tasks.length <= 1 ? "disabled" : ""}>削除</button>
+    </div>`).join("");
+}
+function renderSealRows() {
+  $("s-seals").innerHTML = draft.seals.map((s, i) => `
+    <div class="seal-row" data-i="${i}">
+      <label class="field"><span>下の文字</span><input type="text" data-k="label" value="${esc(s.label)}" maxlength="6"></label>
+      <label class="field"><span>シール</span><input type="text" class="emoji-in" data-k="seal" value="${esc(s.seal)}" maxlength="8"></label>
+      <button class="btn small danger" type="button" data-act="del-seal">削除</button>
+    </div>`).join("") || `<p class="hint">シールの丸はありません。</p>`;
+}
+
+// 入力を draft に反映
+$("s-tasks").addEventListener("input", e => {
+  const row = e.target.closest(".task-row"), k = e.target.dataset.k;
+  if (!row || !k) return;
+  const t = draft.tasks[+row.dataset.i];
+  t[k] = e.target.value;
+  if (k === "pic") row.querySelector(".task-pic").textContent = t.pic;
+});
+$("s-seals").addEventListener("input", e => {
+  const row = e.target.closest(".seal-row"), k = e.target.dataset.k;
+  if (row && k) draft.seals[+row.dataset.i][k] = e.target.value;
+});
+
+dlg.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]");
+  if (!b || !draft) return;
+  const act = b.dataset.act, row = b.closest("[data-i]"), i = row ? +row.dataset.i : -1;
+  if (act !== "defaults" && confirmDefaults) { confirmDefaults = false; $("s-defaults").textContent = "はじめの設定に戻す"; }
+  switch (act) {
+    case "cancel": closeSettings(); break;
+    case "save": save(); break;
+    case "add-task":
+      if (draft.tasks.length >= MAX_TASKS) { msg(`やることは ${MAX_TASKS} こまでです。`); break; }
+      draft.tasks.push({ id: uid(), pic: "⭐", img: "", name: "", time: draft.tasks.length ? draft.tasks[draft.tasks.length - 1].time : "07:00" });
+      renderTaskRows(); $("s-tasks").lastElementChild.querySelector("textarea").focus(); break;
+    case "del-task": draft.tasks.splice(i, 1); renderTaskRows(); break;
+    case "photo": photoTarget = i; $("s-photo-file").value = ""; $("s-photo-file").click(); break;
+    case "unphoto": draft.tasks[i].img = ""; renderTaskRows(); break;
+    case "add-seal":
+      if (draft.seals.length >= MAX_SEALS) { msg(`シールの丸は ${MAX_SEALS} こまでです。`); break; }
+      draft.seals.push({ label: "", seal: "⭐" }); renderSealRows(); break;
+    case "del-seal": draft.seals.splice(i, 1); renderSealRows(); break;
+    case "clear-seals": state.seals = []; saveState(); render(); msg("貼ったシールを ぜんぶ はがしました。", true); break;
+    case "export": exportConfig(); break;
+    case "import": $("s-import-file").value = ""; $("s-import-file").click(); break;
+    case "defaults":
+      if (!confirmDefaults) { confirmDefaults = true; b.textContent = "もう一度押すと戻します"; msg("やること・時刻・色などが はじめの状態に戻ります（保存するまで反映されません）。", true); break; }
+      confirmDefaults = false; b.textContent = "はじめの設定に戻す";
+      draft = DEFAULTS(); fillForm(); msg("はじめの設定を読み込みました。保存すると反映されます。", true); break;
+  }
+});
+
+// 写真は 240px 四方に切り抜いて小さくしてから保存する
+$("s-photo-file").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f || photoTarget == null || !draft) return;
+  const url = URL.createObjectURL(f), im = new Image();
+  im.onload = () => {
+    const S = 240, c = document.createElement("canvas"); c.width = c.height = S;
+    const side = Math.min(im.naturalWidth, im.naturalHeight);
+    c.getContext("2d").drawImage(im, (im.naturalWidth - side) / 2, (im.naturalHeight - side) / 2, side, side, 0, 0, S, S);
+    URL.revokeObjectURL(url);
+    draft.tasks[photoTarget].img = c.toDataURL("image/jpeg", 0.82);
+    renderTaskRows(); msg("");
+  };
+  im.onerror = () => { URL.revokeObjectURL(url); msg("この画像は読み込めませんでした。JPEG か PNG の写真を選んでください。"); };
+  im.src = url;
+});
+
+function readForm() {
+  draft.title = $("s-title").value.trim() || "あさの じゅんび";
+  draft.theme = (dlg.querySelector('input[name="s-theme"]:checked') || {}).value || "pink";
+  draft.ears = $("s-ears").checked;
+  draft.magnet = $("s-magnet").value;
+  draft.goal = { pic: $("s-goal-pic").value.trim(), name: $("s-goal-name").value.trim() || "しゅっぱつ！", time: $("s-goal-time").value };
+  draft.done = { stamp: $("s-done-stamp").value.trim(), text: $("s-done-text").value.trim() || "できた！" };
+  draft.nowFrom = $("s-now-from").value;
+  draft.late = { on: $("s-late-on").checked, from: $("s-late-from").value, until: $("s-late-until").value };
+  draft.hands = { hour: $("s-hour").value, minute: $("s-minute").value };
+  draft.tasks.forEach(t => { t.name = t.name.replace(/\r/g, "").trim(); t.pic = t.pic.trim() || "⭐"; });
+  draft.seals.forEach(s => { s.label = s.label.trim(); s.seal = s.seal.trim() || "⭐"; });
+}
+function validate(c) {
+  if (!c.tasks.length) return "やることを1つ以上 入れてください。";
+  if (c.tasks.some(t => !TIME_RE.test(t.time))) return "やることの時刻が空になっています。";
+  if (!TIME_RE.test(c.goal.time)) return "しゅっぱつの時刻を入れてください。";
+  if (!TIME_RE.test(c.nowFrom)) return "「いま」の目印を出しはじめる時刻を入れてください。";
+  const last = Math.max(...c.tasks.map(t => toMin(t.time)));
+  if (toMin(c.goal.time) < last) return "しゅっぱつの時刻は、いちばん遅いやることの時刻と同じか、それより後にしてください。";
+  if (toMin(c.nowFrom) > Math.min(...c.tasks.map(t => toMin(t.time)))) return "「いま」の目印を出しはじめる時刻は、いちばん早いやることの時刻より前にしてください。";
+  if (c.late.on && (!TIME_RE.test(c.late.from) || !TIME_RE.test(c.late.until) || toMin(c.late.until) <= toMin(c.late.from)))
+    return "赤くする判定の「おわり」は「はじまり」より後にしてください。";
+  return "";
+}
+function save() {
+  readForm();
+  const err = validate(draft);
+  if (err) { msg(err); return; }
+  const next = normalize(draft);
+  if (!writeJSON(CONFIG_KEY, next)) { msg("保存できませんでした。写真の数を減らすか、ブラウザの保存領域を確認してください。"); return; }
+  // シールの丸が減ったら、はみ出した記録を消す
+  state.seals = state.seals.slice(0, next.seals.length);
+  const ids = new Set(next.tasks.map(t => t.id));
+  for (const id in state.done) if (!ids.has(id)) delete state.done[id];
+  saveState();
+  config = next; render(); closeSettings();
+}
+
+function exportConfig() {
+  readForm();
+  const blob = new Blob([JSON.stringify(normalize(draft), null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "asa-board-settings.json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  msg("いまの入力内容をファイルに書き出しました。", true);
+}
+$("s-import-file").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f || !draft) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try { draft = normalize(JSON.parse(r.result)); fillForm(); msg("読み込みました。保存すると反映されます。", true); }
+    catch (err) { msg("このファイルは読み込めませんでした。書き出した .json ファイルを選んでください。"); }
+  };
+  r.readAsText(f);
+});
+
+render();
+keepAwake();
+setInterval(tick, 5000);
+</script>
 </body>
 </html>
