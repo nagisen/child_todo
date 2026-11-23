@@ -199,6 +199,7 @@ body { background: var(--page); color: var(--ink); font-family: var(--f-body); l
         <span class="wake" id="wake">画面スリープ：確認中</span>
         <a class="link" href="./">あさの じゅんび</a>
         <button class="reset" id="fullscreen" type="button" hidden>全画面</button>
+        <button class="reset" id="sound-test" type="button">🔔 おとテスト</button>
         <button class="reset" id="reset" type="button">きょうの分を もどす</button>
       </div>
     </div>
@@ -297,16 +298,21 @@ function pieSVG(frac, mode) {
   </svg>`;
 }
 
-// ---- 終わりの音（タップで はじめたときに 音を出す準備をする） ----
-let audio = null;
+// ---- 終わりの音 ----
+// ブラウザは タップしたあとでないと 音を出させないので、画面のどこかを タップしたときに 準備する
+const CHIME_EVERY = 6000; // 「けしたよ」を おすまで 6びょうごとに くりかえす
+let audio = null, lastChime = 0;
 function prepareAudio() {
   try {
     if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
-    if (audio.state === "suspended") audio.resume();
+    if (audio.state === "suspended") return audio.resume();
   } catch (e) {}
+  return Promise.resolve();
 }
 function chime() {
-  if (!audio) return;
+  if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+  // まだ タップされていない（音の準備が できていない）ときは 鳴らさない。あとで まとめて鳴るのを ふせぐ
+  if (!audio || audio.state !== "running") return;
   try {
     const t0 = audio.currentTime;
     [784, 659, 523].forEach((f, k) => {
@@ -319,8 +325,9 @@ function chime() {
       o.start(t0 + k * .45); o.stop(t0 + k * .45 + .85);
     });
   } catch (e) {}
-  if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
 }
+document.addEventListener("pointerdown", prepareAudio, true);
+document.addEventListener("keydown", prepareAudio, true);
 
 // ---- 画面づくり ----
 const pad = n => String(n).padStart(2, "0");
@@ -412,8 +419,9 @@ function tick() {
   const a = state.active;
   if (a && a.since && remaining() <= 0) {
     state.used[a.i] = true; state.over = a.i; state.active = null; save();
-    chime();
+    lastChime = 0;
   }
+  if (state.over != null && Date.now() - lastChime >= CHIME_EVERY) { chime(); lastChime = Date.now(); }
   render();
 }
 
@@ -448,6 +456,8 @@ $("stop").addEventListener("click", () => {
   else if (state.active) { state.used[state.active.i] = true; state.active = null; }
   save(); render();
 });
+
+$("sound-test").addEventListener("click", () => { Promise.resolve(prepareAudio()).then(chime, chime); });
 
 $("reset").addEventListener("click", () => {
   if (!confirm("きょうの テレビの きろくを ぜんぶ もどしますか？")) return;
